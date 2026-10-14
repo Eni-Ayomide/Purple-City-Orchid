@@ -1,0 +1,56 @@
+I'm building Purple Hearts, an 18+ campus-focused dating PWA. This project is exclusively the backend. The frontend is being developed separately by another developer and will be integrated later.
+
+Use the following architecture:
+- Node.js with TypeScript
+- Express for the REST API
+- PostgreSQL for persistent data
+- Prisma ORM for database access and migrations
+- Firebase Authentication for user authentication
+- Cloudflare R2 for profile photo storage, to be integrated in a later phase
+- Socket.IO for real-time messaging, to be integrated in a later phase
+- Render for production API hosting
+
+I want a maintainable, production-oriented backend rather than a quick prototype.
+
+## Phase 0: Foundation only
+
+Do not implement the entire dating application yet.
+
+First, create the backend project structure with:
+
+1. A properly configured TypeScript and Express application.
+2. A modular folder structure for routes, controllers, middleware, services, database access, configuration, validation, and tests.
+3. Environment variable validation using a suitable library.
+4. A PostgreSQL connection configured through Prisma.
+5. A versioned API structure beginning with /api/v1.
+6. A GET /health endpoint that confirms the API is running without exposing secrets or database credentials.
+7. Centralized error handling, request validation, and structured logging.
+8. Appropriate security middleware, including secure HTTP headers, request-size limits, and rate limiting where appropriate.
+9. CORS configuration that can be restricted to explicitly configured frontend origins.
+10. A .gitignore file that excludes secrets, generated files, dependencies, and local environment files.
+11. A .env.example containing placeholder values only.
+12. A README explaining installation, local development, environment variables, database setup, tests, and deployment.
+13. A test suite covering the health endpoint, invalid requests, and error handling.
+14. A clear migration workflow suitable for development and production.
+
+## Engineering requirements
+
+- Never hardcode credentials, API keys, passwords, or tokens.
+- Never expose secrets to the frontend.
+- Use parameterized database access through Prisma.
+- Do not use a mock database as a substitute for PostgreSQL.
+- Do not claim that external services are connected unless they have actually been configured and tested.
+- Do not automatically create paid external services or incur costs.
+- Do not use destructive database commands against a production database.
+- Keep the application compatible with deployment on Render.
+- Bind the server to the port provided by process.env.PORT and to 0.0.0.0 in production.
+- Separate development and production configuration.
+- Make sure the application builds and its tests pass before declaring the phase complete.
+
+For this phase, Firebase, Cloudflare R2, Socket.IO, and Paystack should be represented only in the documented future architecture. Do not implement placeholder integrations that appear functional but are not.
+
+## Before starting
+
+Briefly explain the proposed folder structure and important dependencies. Then implement Phase 0, run the build and tests, fix any failures, and report the exact commands I should use to run the application.
+
+Keep the code understandable and explain important decisions so I can learn the architecture as we build it.

@@ -1,0 +1,1 @@
+- [Purple Hearts scope](purple-hearts-scope.md) — 18+ campus dating PWA; this repository is backend-only, and Phase 0 must not add fake integrations.
