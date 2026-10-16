@@ -1,121 +1,132 @@
-# Purple Hearts API
+﻿# Purple City Orchid
 
-Phase 0 is a backend foundation for the 18+ campus-focused Purple Hearts app. It is an API-only service; the frontend is developed separately.
+An 18+ campus-focused dating app, organized as a monorepo.
 
-## Current scope
-
-- TypeScript and Express REST API, with public API routes grouped under `/api/v1`.
-- `GET /health` for an API liveness check. It does not claim to verify database availability.
-- Prisma configured for PostgreSQL, with a minimal `users` table and an initial migration.
-- Validated environment configuration, request-body validation middleware, centralized JSON errors, and Pino request/application logging.
-- Helmet security headers, a 100 KB JSON body limit, API rate limiting, and an explicit frontend-origin CORS allowlist.
-- Tests for health, invalid requests, unknown routes, malformed JSON, and unexpected errors.
-
-Firebase Authentication, Cloudflare R2, Socket.IO, and Paystack are future architecture only. No external service is provisioned or connected in this phase.
-
-## Project structure
+## Repository structure
 
 ```text
-prisma/
-  migrations/           # Versioned PostgreSQL migrations
-  schema.prisma
-src/
-  config/               # Environment validation and logging
-  controllers/          # HTTP request handlers
-  db/                   # Prisma client
-  errors/               # Typed API errors
-  middleware/           # Error handling and 404 responses
-  routes/               # Health and versioned API routes
-  services/             # Reusable application logic
-  validation/           # Request validation middleware
-tests/                  # API and middleware tests
+Purple-City-Orchid/
+├── backend/              # TypeScript, Express, Prisma API
+│   ├── prisma/            # Prisma schema and database migrations
+│   ├── src/
+│   ├── tests/
+│   ├── .env.example
+│   ├── package.json
+│   └── package-lock.json
+├── frontend/              # Frontend application (to be added)
+├── .gitignore
+└── README.md
 ```
 
-## Requirements and installation
+The backend and frontend are maintained in one Git repository but can be developed and deployed independently.
+
+## Backend
+
+The backend is an API-only service built with TypeScript, Express, and Prisma, using PostgreSQL.
+
+### Current capabilities
+
+- `GET /health` provides an API liveness check; it does not verify database availability.
+- `GET /api/v1` returns API version metadata.
+- Prisma manages the PostgreSQL schema and versioned migrations.
+- Environment variables are validated at startup.
+- Request validation and centralized JSON error handling.
+- Pino application and HTTP request logging.
+- Helmet security headers, request-body size limits, API rate limiting, and a configurable CORS allowlist.
+- Automated tests for health checks, request validation, and error handling.
+
+Firebase Authentication, Cloudflare R2, Socket.IO, and Paystack are planned future integrations. They are not provisioned or connected in the current phase.
+
+### Requirements
 
 - Node.js 20 or newer
-- A PostgreSQL database for database operations and migrations
+- PostgreSQL for database operations and migrations
 
-Install dependencies:
+### Local development
 
-```sh
+Run backend commands from the `backend/` directory:
+
+```powershell
+cd backend
 npm ci
-```
-
-Copy `.env.example` to `.env` and replace the placeholder database URL with a PostgreSQL connection string:
-
-```sh
-cp .env.example .env
-```
-
-The app can start in development without a database URL so `/health` remains usable. Database operations require a real PostgreSQL connection. Production startup requires `DATABASE_URL`; the service does not fall back to a mock database.
-
-## Environment variables
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `NODE_ENV` | No | `development`, `test`, or `production`; defaults to `development`. |
-| `PORT` | No | HTTP port; defaults to `5000`. The hosting platform's `PORT` is honored. |
-| `DATABASE_URL` | Production | PostgreSQL connection URL used by Prisma. Supply it in development before running migrations or database operations. |
-| `FRONTEND_ORIGINS` | No | Comma-separated exact frontend origins allowed by CORS, for example `https://app.example.com`. |
-| `LOG_LEVEL` | No | Pino level: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, or `silent`; defaults to `info`. |
-
-Invalid values cause startup to fail with a configuration error. Do not commit `.env` or put secrets in frontend configuration.
-
-## Local development
-
-```sh
 npm run dev
 ```
 
-The API binds to `0.0.0.0` and uses `PORT` (default `5000`).
+The development server listens on `0.0.0.0` using `PORT`, which defaults to `5000`.
 
-Available endpoints:
+### Environment configuration
 
-- `GET /health` — liveness response; does not expose secrets or database credentials.
-- `GET /api/v1` — API version metadata.
+Copy `backend/.env.example` to `backend/.env` and set the required values for your local environment.
 
-## Database and migrations
+| Variable | Purpose |
+| --- | --- |
+| `NODE_ENV` | Runtime environment; defaults to development. |
+| `PORT` | HTTP port; defaults to `5000`. |
+| `DATABASE_URL` | PostgreSQL connection URL for Prisma. Required for database operations and production startup. |
+| `FRONTEND_ORIGINS` | Comma-separated list of allowed frontend origins. |
+| `LOG_LEVEL` | Pino logging level; defaults to `info`. |
 
-Prisma uses the PostgreSQL URL from `DATABASE_URL`. The committed initial migration creates only the minimal `users` table; it does not implement dating, authentication, or profile features.
+Never commit `.env` files or expose credentials in frontend configuration.
 
-For local development, apply pending migrations and create new ones with:
+The API can start without a database URL in development so the health endpoint remains usable. Database operations require a valid PostgreSQL connection.
 
-```sh
-npm run db:migrate -- --name init
-```
+### Database and migrations
 
-After changing `prisma/schema.prisma`, create a migration with a descriptive name and commit both the schema and generated migration. To check the schema and regenerate the Prisma client:
+Run the following commands from `backend/`:
 
-```sh
+```powershell
 npm run db:validate
 npm run db:generate
 ```
 
-For production, apply committed migrations with:
+To create a development migration after changing `prisma/schema.prisma`:
 
-```sh
+```powershell
+npm run db:migrate -- --name describe_your_change
+```
+
+To apply committed migrations in a deployment environment:
+
+```powershell
 npm run db:migrate:deploy
 ```
 
-Run production migrations as a deployment/release step before starting the new application version. Do not use `prisma migrate dev`, `prisma migrate reset`, or other destructive development commands against production.
+Do not run destructive development migration commands against production.
 
-## Build and tests
+### Tests and build
 
-```sh
+From `backend/`:
+
+```powershell
 npm test
 npm run build
+npm start
 ```
 
-Tests do not connect to PostgreSQL. The build generates the Prisma client and compiles TypeScript to `dist/`.
+The build generates the Prisma client and compiles TypeScript into `backend/dist/`.
 
-## Render deployment
+## Deployment
 
-Create a Render web service using:
+### Backend on Render
+
+Configure the Render service to use `backend/` as its **Root Directory**.
 
 - Build command: `npm ci && npm run build`
 - Start command: `npm start`
-- Environment: `NODE_ENV=production`, a real `DATABASE_URL`, and the production `FRONTEND_ORIGINS` allowlist.
-- Release/pre-deploy step: `npm run db:migrate:deploy`
+- Required production environment: `NODE_ENV=production`, a valid `DATABASE_URL`, and the appropriate `FRONTEND_ORIGINS`.
+- Run `npm run db:migrate:deploy` as a release or pre-deploy step before starting the new application version.
 
-The server listens on `0.0.0.0` and uses the `PORT` provided by Render. No paid services are created by this project setup.
+The service listens on `0.0.0.0` and honors the hosting platform's `PORT`.
+
+### Frontend on Vercel
+
+The `frontend/` directory is reserved for the frontend application. Once it is added, configure Vercel to use `frontend/` as its Root Directory and set its build settings according to the frontend framework.
+
+The frontend framework and deployment settings have not yet been configured in this repository.
+
+## Security
+
+- Do not commit secrets, local environment files, or generated dependencies.
+- Keep database credentials on the backend; never expose them to the browser.
+- Restrict CORS to the frontend origins you intend to allow.
+- Apply database migrations deliberately and review schema changes before deployment.

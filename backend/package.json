@@ -1,8 +1,8 @@
 {
-  "name": "purple-hearts-api",
+  "name": "purple-city-orchid-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Phase 0 backend foundation for Purple Hearts.",
+  "description": "Backend API for Purple City Orchid",
   "type": "module",
   "engines": {
     "node": ">=20"
