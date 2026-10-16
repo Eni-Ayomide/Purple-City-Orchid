@@ -8,9 +8,9 @@ import { logger } from "./config/logger.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { notFound } from "./middleware/not-found.js";
 import { healthRouter } from "./routes/health.js";
-import { v1Router } from "./routes/v1/index.js";
+import { createV1Router, type V1RouterDependencies } from "./routes/v1/index.js";
 
-export function createApp() {
+export function createApp(dependencies: V1RouterDependencies = {}) {
   const app = express();
 
   app.disable("x-powered-by");
@@ -40,7 +40,7 @@ export function createApp() {
   );
 
   app.use("/health", healthRouter);
-  app.use("/api/v1", v1Router);
+  app.use("/api/v1", createV1Router(dependencies));
   app.use(notFound);
   app.use(errorHandler);
 

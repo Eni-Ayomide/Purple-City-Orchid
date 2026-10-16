@@ -14,6 +14,9 @@ const environmentSchema = z.object({
     .optional(),
   FRONTEND_ORIGINS: z.string().default(""),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  FIREBASE_PROJECT_ID: z.string().optional(),
+  FIREBASE_CLIENT_EMAIL: z.string().optional(),
+  FIREBASE_PRIVATE_KEY: z.string().optional(),
 });
 
 const parsed = environmentSchema.safeParse(process.env);
@@ -31,6 +34,9 @@ if (parsed.data.NODE_ENV === "production" && !parsed.data.DATABASE_URL) {
 
 export const env = {
   ...parsed.data,
+  FIREBASE_PROJECT_ID: parsed.data.FIREBASE_PROJECT_ID?.trim() || undefined,
+  FIREBASE_CLIENT_EMAIL: parsed.data.FIREBASE_CLIENT_EMAIL?.trim() || undefined,
+  FIREBASE_PRIVATE_KEY: parsed.data.FIREBASE_PRIVATE_KEY?.trim() || undefined,
   frontendOrigins: parsed.data.FRONTEND_ORIGINS.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
