@@ -15,5 +15,24 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
+  profile       UserProfile?
+
   @@map("users")
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  displayName String   @map("display_name") @db.VarChar(50)
+  dateOfBirth DateTime @db.Date @map("date_of_birth")
+  bio         String?  @db.VarChar(500)
+  gender      String?  @db.VarChar(30)
+  university  String?  @db.VarChar(150)
+  interests   String[] @default([])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
 }
