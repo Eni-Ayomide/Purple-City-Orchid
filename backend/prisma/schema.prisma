@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum SwipeAction {
+  LIKE
+  PASS
+
+  @@map("swipe_action")
+}
+
 model User {
   id            String   @id @default(cuid())
   firebaseUid   String?  @unique @map("firebase_uid")
@@ -15,8 +22,12 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  profile       UserProfile?
-  photos        ProfilePhoto[]
+  profile        UserProfile?
+  photos         ProfilePhoto[]
+  swipesGiven    Swipe[]        @relation("SwipesGiven")
+  swipesReceived Swipe[]        @relation("SwipesReceived")
+  matchesAsA     Match[]        @relation("MatchesAsA")
+  matchesAsB     Match[]        @relation("MatchesAsB")
 
   @@map("users")
 }
@@ -51,4 +62,33 @@ model ProfilePhoto {
 
   @@unique([userId, position])
   @@map("profile_photos")
+}
+
+model Swipe {
+  id        String      @id @default(cuid())
+  swiperId  String      @map("swiper_id")
+  targetId  String      @map("target_id")
+  action    SwipeAction
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  swiper User @relation("SwipesGiven", fields: [swiperId], references: [id], onDelete: Cascade)
+  target User @relation("SwipesReceived", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([swiperId, targetId])
+  @@index([targetId])
+  @@map("swipes")
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  userAId   String   @map("user_a_id")
+  userBId   String   @map("user_b_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userA User @relation("MatchesAsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("MatchesAsB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+  @@map("matches")
 }
