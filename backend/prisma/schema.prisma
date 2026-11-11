@@ -16,6 +16,7 @@ model User {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   profile       UserProfile?
+  photos        ProfilePhoto[]
 
   @@map("users")
 }
@@ -35,4 +36,19 @@ model UserProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+}
+
+model ProfilePhoto {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  storageKey  String   @unique @map("storage_key") @db.VarChar(255)
+  contentType String   @map("content_type") @db.VarChar(100)
+  sizeBytes   Int      @map("size_bytes")
+  position    Int
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, position])
+  @@map("profile_photos")
 }
