@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { createAuthController } from "../../controllers/auth-controller.js";
+import { createDiscoveryController } from "../../controllers/discovery-controller.js";
 import { createPhotoController } from "../../controllers/photo-controller.js";
 import { createProfileController } from "../../controllers/profile-controller.js";
 import { createSwipeController } from "../../controllers/swipe-controller.js";
+import { prismaDiscoveryRepository, type DiscoveryRepository } from "../../db/discovery-repository.js";
 import { prismaPhotoRepository, type PhotoRepository } from "../../db/photo-repository.js";
 import { prismaProfileRepository, type ProfileRepository } from "../../db/profile-repository.js";
 import { prismaSwipeRepository, type SwipeRepository } from "../../db/swipe-repository.js";
 import { prismaUserRepository, type UserRepository } from "../../db/user-repository.js";
 import { createRequireAuth } from "../../middleware/require-auth.js";
+import { DiscoveryService } from "../../services/discovery-service.js";
 import { PhotoService } from "../../services/photo-service.js";
 import { unconfiguredPhotoStorage } from "../../services/photo-storage.js";
 import { ProfileService } from "../../services/profile-service.js";
@@ -16,6 +19,7 @@ import { UserService } from "../../services/user-service.js";
 import { verifyFirebaseIdToken } from "../../services/firebase-admin.js";
 import type { FirebaseTokenVerifier } from "../../types/auth.js";
 import type { PhotoStorage } from "../../types/photo-storage.js";
+import { discoveryQuerySchema } from "../../validation/discovery-schemas.js";
 import {
   confirmPhotoSchema,
   photoUploadRequestSchema,
@@ -24,6 +28,7 @@ import {
 import { upsertProfileSchema } from "../../validation/profile-schemas.js";
 import { swipeSchema } from "../../validation/swipe-schemas.js";
 import { validateBody } from "../../validation/validate-body.js";
+import { validateQuery } from "../../validation/validate-query.js";
 
 export interface V1RouterDependencies {
   firebaseTokenVerifier?: FirebaseTokenVerifier;
@@ -32,6 +37,7 @@ export interface V1RouterDependencies {
   photoRepository?: PhotoRepository;
   photoStorage?: PhotoStorage;
   swipeRepository?: SwipeRepository;
+  discoveryRepository?: DiscoveryRepository;
 }
 
 export function createV1Router(dependencies: V1RouterDependencies = {}) {
@@ -49,11 +55,17 @@ export function createV1Router(dependencies: V1RouterDependencies = {}) {
     profileRepository,
     dependencies.swipeRepository ?? prismaSwipeRepository,
   );
+  const discoveryService = new DiscoveryService(
+    userService,
+    profileRepository,
+    dependencies.discoveryRepository ?? prismaDiscoveryRepository,
+  );
   const requireAuth = createRequireAuth(dependencies.firebaseTokenVerifier ?? verifyFirebaseIdToken);
   const authController = createAuthController(userService);
   const profileController = createProfileController(profileService);
   const photoController = createPhotoController(photoService);
   const swipeController = createSwipeController(swipeService);
+  const discoveryController = createDiscoveryController(discoveryService);
 
   router.get("/", (_request, response) => {
     response.status(200).json({
@@ -90,6 +102,13 @@ export function createV1Router(dependencies: V1RouterDependencies = {}) {
 
   router.post("/swipes", requireAuth, validateBody(swipeSchema), swipeController.swipe);
   router.get("/me/matches", requireAuth, swipeController.listMatches);
+
+  router.get(
+    "/discovery",
+    requireAuth,
+    validateQuery(discoveryQuerySchema),
+    discoveryController.browse,
+  );
 
   return router;
 }
